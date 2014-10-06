@@ -6,8 +6,7 @@ build
 *.iws
 release.properties
 target
-.classpath
-.project
-.settings
 .checkstyle
 .idea
+bin/
+
