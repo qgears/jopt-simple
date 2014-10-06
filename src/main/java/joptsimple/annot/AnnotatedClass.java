@@ -13,18 +13,27 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
-
+/**
+ * An joptsimple annotated arguments object can be parsed usig this
+ * class.
+ * First the parseAnnotations() method must be used to read the annotated fields from
+ * an annotated arguments class.
+ * Then the parseArgs() method must be used to parse the actual command line arguments
+ * of the application.
+ * @author rizsi
+ *
+ */
 public class AnnotatedClass {
-	public static void main(String[] args) throws Exception {
-		AnnotatedClass ac=new AnnotatedClass();
-		ac.parseAnnotations(new TestClass());
-		ac.parseArgs(new String[]{"--korte","cica", "--alma", "112", "--tst", "selected" , "--", "remaining"});
-		ac.print();
-	}
-	Object o;
-	OptionParser parser;
-	OptionSet options;
-	Map<Field, OptionSpec<?>> args;
+	private Object o;
+	private OptionParser parser;
+	private OptionSet options;
+	private Map<Field, OptionSpec<?>> args;
+	/**
+	 * Print the configured arguments object.
+	 * This method should only be for debugging purposes to quickly
+	 * print the parsed parameters of the application.
+	 * @throws Exception
+	 */
 	public void print() throws Exception
 	{
 		Class<?> c=o.getClass();
@@ -35,6 +44,12 @@ public class AnnotatedClass {
 		}
 		System.out.println("Remaining args: "+nonOptionArguments());
 	}
+	/**
+	 * Parse the command line arguments array using the embedded parser instance.
+	 * Sets the values on the stored arguments object based on the command line arguments.
+	 * @param args
+	 * @throws Exception
+	 */
 	public void parseArgs(String [] args) throws Exception
 	{
 		options=parser.parse(args);
@@ -70,23 +85,32 @@ public class AnnotatedClass {
 	private boolean isSimpleBoolean(Field f) {
 		return f.getAnnotation(JOSimpleBoolean.class)!=null;
 	}
-	public void parseAnnotations(Object o) throws Exception
+	/**
+	 * Read a class using reflection. Finds all public fields of the class
+	 * and generates an option entry into embedded {@link OptionParser} instance
+	 * for each of them.
+	 * {@link JOHelp} and {@link JOSimpleBoolean} annotations are handled.
+	 * 
+	 * @param programArgumentsObject the object is stored by reference and the
+	 * fields of this object are set when the parseArgs() method is called.
+	 * @throws Exception in case of illegal or unknown fields.
+	 */
+	public void parseAnnotations(Object programArgumentsObject) throws Exception
 	{
-		this.o=o;
+		this.o=programArgumentsObject;
 		parser = new OptionParser();
 		args=new HashMap<Field, OptionSpec<?>>();
-		Class<?> c=o.getClass();
+		Class<?> c=programArgumentsObject.getClass();
 		Field[] fs=c.getFields();
 		for(Field f: fs)
 		{
-//			System.out.println("Myfield: "+f.getName()+" "+f.getType());
 			Class<?> t=f.getType();
 			if(t.isPrimitive())
 			{
 				t=getWrappingClass(t);
 			}
 			OptionSpecBuilder spec=parser.accepts(f.getName(), getHelp(f));
-			Object defaultValue=f.get(o);
+			Object defaultValue=f.get(programArgumentsObject);
 			OptionSpec<?>a=null;
 			if(t==Integer.class)
 			{
@@ -149,7 +173,6 @@ public class AnnotatedClass {
 				}
 			}else if(t==List.class)
 			{
-//				spec.withRequiredArg().ofType(argumentType)
 				ArgumentAcceptingOptionSpec<String> en=spec.withRequiredArg().withValuesSeparatedBy(',');
 				a=en;
 				if(defaultValue!=null)
@@ -196,8 +219,6 @@ public class AnnotatedClass {
 			
 			Enum<?> e=(Enum<?>)o;
 			h=e.getClass().getField(""+e).getAnnotation(JOHelp.class);
-//			Enum.
-//			System.out.println(""+e.);
 		}else if(o instanceof Field)
 		{
 			Field f=(Field)o;
@@ -245,9 +266,20 @@ public class AnnotatedClass {
 		}
 		return ret.toString();
 	}
+	/**
+	 * Print the auto-generated help content onto the output stream.
+	 * @param out Print the help content onto this.
+	 * @throws IOException
+	 */
 	public void printHelpOn(PrintStream out) throws IOException {
 		parser.printHelpOn(out);
 	}
+	/**
+	 * Get the list of non option arguments (all arguments after the -- mark on the command line)
+	 * that are not parsed by this options parser instance.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
 	public List<String> nonOptionArguments() {
 		return (List<String>)options.nonOptionArguments();
 	}
