@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,23 +15,53 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
+
 /**
- * An joptsimple annotated arguments object can be parsed usig this
- * class.
- * First the parseAnnotations() method must be used to read the annotated fields from
- * an annotated arguments class.
- * Then the parseArgs() method must be used to parse the actual command line arguments
- * of the application.
- * @author rizsi
- *
+ * Parses command line parameters into a Java DTO.
+ * <ul>
+ * <li>All public fields of DTO class is identified as a command line argument
+ * (arg name equals field name)
+ * <li>Use {@link JOHelp} annotation on fields, data types and enum literals, to
+ * attach documentation to an argument.
+ * </ul>
+ * 
+ * <h3>Usage</h3>
+ * <ol>
+ * <li>Define DTO class, that describes arguments
+ * <li>Create a new instance of DTO
+ * <li>Create a new {@link AnnotatedClass}, and call
+ * {@link #parseAnnotations(Object)}, pass DTO as parameter.
+ * <li>Call {@link #parseArgs(String[])}.
+ * <li>DTO will contain the data, parsed from input parameters
+ * <li>After parsing annotations, the {@link #printHelpOn(PrintStream)} can be
+ * used to generate a user readable documentation of arguments.
+ * </ol>
+ * <p>
+ * 
+ * 
+ * The tool automatically parses argument values, and tries to convert them to
+ * expected datatype (which is the type of the field in DTO class). Primitive
+ * types, enumerations, Strings, and Lists from these types are supported out of the
+ * box. For parsing more complex datatypes automatically see
+ * {@link ArgumentAcceptingOptionSpec#ofType(Class)}
+ * 
+ * @author rizsi, agostoni
+ * 
+ * @see JOHelp
+ * @see JOSimpleBoolean
+ * @see OptionParser
  */
 public class AnnotatedClass {
+	
 	private Object o;
 	private OptionParser parser;
 	private OptionSet options;
 	private Map<Field, OptionSpec<?>> args;
+	
 	/**
-	 * Print the configured arguments object.
+	 * Prints all arguments and the value of them. Must be called after
+	 * {@link #parseAnnotations(Object)} was called.
+	 * <p>
 	 * This method should only be for debugging purposes to quickly
 	 * print the parsed parameters of the application.
 	 * @throws Exception
@@ -44,10 +76,13 @@ public class AnnotatedClass {
 		}
 		System.out.println("Remaining args: "+nonOptionArguments());
 	}
+	
 	/**
 	 * Parse the command line arguments array using the embedded parser instance.
 	 * Sets the values on the stored arguments object based on the command line arguments.
-	 * @param args
+	 *  Method {@link #parseAnnotations(Object)} must be called before!
+	 * 
+	 * @param args The arguments to parse as String array
 	 * @throws Exception
 	 */
 	public void parseArgs(String [] args) throws Exception
@@ -61,7 +96,7 @@ public class AnnotatedClass {
 				value=options.has(this.args.get(f));
 			}else if(f.getType()==List.class)
 			{
-				value=this.args.get(f).values(options);
+				value=options.valuesOf(this.args.get(f));
 			}else
 			{
 				value=this.args.get(f).value(options);
@@ -85,6 +120,7 @@ public class AnnotatedClass {
 	private boolean isSimpleBoolean(Field f) {
 		return f.getAnnotation(JOSimpleBoolean.class)!=null;
 	}
+
 	/**
 	 * Read a class using reflection. Finds all public fields of the class
 	 * and generates an option entry into embedded {@link OptionParser} instance
@@ -93,7 +129,10 @@ public class AnnotatedClass {
 	 * 
 	 * @param programArgumentsObject the object is stored by reference and the
 	 * fields of this object are set when the parseArgs() method is called.
+	 *
 	 * @throws Exception in case of illegal or unknown fields.
+	 * @see JOHelp
+	 * @see JOSimpleBoolean
 	 */
 	public void parseAnnotations(Object programArgumentsObject) throws Exception
 	{
@@ -173,12 +212,9 @@ public class AnnotatedClass {
 				}
 			}else if(t==List.class)
 			{
-				ArgumentAcceptingOptionSpec<String> en=spec.withRequiredArg().withValuesSeparatedBy(',');
+				ArgumentAcceptingOptionSpec<?> en = createListParameters(spec,
+						defaultValue, getListElementType(f));
 				a=en;
-				if(defaultValue!=null)
-				{
-					en.defaultsTo("");
-				}
 			}
 			else
 			{
@@ -190,7 +226,55 @@ public class AnnotatedClass {
 			}
 		}
 	}
+	private <T>ArgumentAcceptingOptionSpec<T> createListParameters(
+			OptionSpecBuilder spec, Object defaultValue, Class<T> elementType) {
+		if (elementType != null){
+			ArgumentAcceptingOptionSpec<T> en=spec.withRequiredArg().ofType(elementType).withValuesSeparatedBy(',');
+			if (defaultValue != null){
+				@SuppressWarnings("unchecked")
+				List<T> defaults = (List<T>) defaultValue;
+				if (!defaults.isEmpty()){
+					en.defaultsToCollection(defaults);
+				}
+			}
+			return en;
+		} else {
+			throw new RuntimeException("Raw list types are not supported "+spec.toString());
+		}
+	}
 	
+	/**
+	 * Returns the generic type argument of {@link List} class, that is used
+	 * in the declaration of the specified {@link Field}.
+	 * <p>
+	 * Example:
+	 * <pre>
+	 * 
+	 * Class M {
+	 * 	List&lt;Integer> myField;
+	 * }
+	 * 
+	 * getListElementType(M.class.getField("myField")) will return Integer.class
+	 * </pre>
+	 * @param f
+	 *            A field with type {@link List}
+	 * @return
+	 */
+	private Class<?> getListElementType(Field f) {
+		if (f != null){
+			if (f.getType().equals(List.class)){
+				Type genericFieldType = f.getGenericType();
+				if (genericFieldType instanceof ParameterizedType){
+					ParameterizedType aType = (ParameterizedType) genericFieldType;
+					Type[] fieldArgTypes = aType.getActualTypeArguments();
+					if (fieldArgTypes != null && fieldArgTypes.length == 1){
+						return (Class<?>) fieldArgTypes[0];
+					}
+				}
+			}
+		}
+		return null;
+	}
 	private Class<?> getWrappingClass(Class<?> t) {
 		if(t==int.class)
 		{
@@ -242,45 +326,72 @@ public class AnnotatedClass {
 		}
 		if(f.getType().isEnum())
 		{
-			ret.append("\n");
-			String h=getHelpText(f.getType());
-			if(h!=null)
-			{
-				ret.append(h);
+			appendEnumDocumentation(f.getType(), ret);
+		}
+		if (f.getType() == List.class){
+			Class<?> elementType = getListElementType(f);
+			if (elementType != null && elementType.isEnum()){
+				appendEnumDocumentation(elementType, ret);
 			}
-			ret.append("(possible values: ");
-			Object[] cs=f.getType().getEnumConstants();
-			for(int i=0;i<cs.length;++i)
-			{
-				Object o=cs[i];
-				h=getHelpText(o);
-				ret.append(" "+o);
-				if(h!=null)
-				{
-					ret.append(" ("+h+")");
-				}
-				if(i<cs.length-1)
-				ret.append(", ");
-			}
-			ret.append(")");
 		}
 		return ret.toString();
 	}
+
 	/**
-	 * Print the auto-generated help content onto the output stream.
-	 * @param out Print the help content onto this.
+	 * Prints valid enum literals of specified enum type.
+	 * 
+	 * @param type
+	 *            The enum type (see {@link Class#isEnum()})
+	 * @param ret
+	 *            The target {@link StringBuilder}
+	 * @throws NoSuchFieldException
+	 */
+	private void appendEnumDocumentation(Class<?> type, StringBuilder ret)
+			throws NoSuchFieldException {
+		ret.append("\n");
+		String h=getHelpText(type);
+		if(h!=null)
+		{
+			ret.append(h);
+		}
+		ret.append("(possible values: ");
+		Object[] cs=type.getEnumConstants();
+		for(int i=0;i<cs.length;++i)
+		{
+			Object o=cs[i];
+			h=getHelpText(o);
+			ret.append(" "+o);
+			if(h!=null)
+			{
+				ret.append(" ("+h+")");
+			}
+			if(i<cs.length-1)
+			ret.append(", ");
+		}
+		ret.append(")\n");
+	}
+
+	/**
+	 * Prints a user readable documentation of arguments. Method
+	 * {@link #parseAnnotations(Object)} must be called before.
+	 * 
+	 * @param out The target {@link PrintStream}
 	 * @throws IOException
+	 * @see JOHelp
+	 * @see OptionParser#printHelpOn(java.io.OutputStream)
 	 */
 	public void printHelpOn(PrintStream out) throws IOException {
 		parser.printHelpOn(out);
 	}
+
 	/**
 	 * Get the list of non option arguments (all arguments after the -- mark on the command line)
 	 * that are not parsed by this options parser instance.
+     * <p>
+     * See {@link OptionSet#nonOptionArguments()}.
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List<String> nonOptionArguments() {
-		return (List<String>)options.nonOptionArguments();
+	public List<?> nonOptionArguments() {
+		return options.nonOptionArguments();
 	}
 }

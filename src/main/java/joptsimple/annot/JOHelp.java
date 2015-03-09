@@ -4,7 +4,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Add help content to an joptsimple argument.
+ * Attach documentation to a field that represents a command line argument. This
+ * help text will be printed when
+ * {@link AnnotatedClass#printHelpOn(java.io.PrintStream)} is called.
+ * 
  * @author rizsi
  *
  */

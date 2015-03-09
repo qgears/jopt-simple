@@ -26,12 +26,12 @@
 package joptsimple;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 
 import static java.util.Collections.*;
 import static java.util.Objects.*;
-
 import static joptsimple.internal.Reflection.*;
 import static joptsimple.internal.Strings.*;
 
@@ -226,7 +226,19 @@ public abstract class ArgumentAcceptingOptionSpec<V> extends AbstractOptionSpec<
 
         return this;
     }
-
+    /**
+     * <p>Specifies the default values for the argument of the option that this spec
+     * represents.</p>
+     * 
+     * @param values The collection of default values.
+     * @return
+     */
+    public ArgumentAcceptingOptionSpec<V> defaultsToCollection( Collection<V> values ) {
+    	for (V each : values){
+    		addDefaultValue(each);
+    	}
+    	return this;
+    }
     /**
      * Marks this option as required. An {@link OptionException} will be thrown when
      * {@link OptionParser#parse(java.lang.String...)} is called, if an option is marked as required and not specified
