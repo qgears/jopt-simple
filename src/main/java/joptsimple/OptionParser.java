@@ -208,10 +208,10 @@ public class OptionParser implements OptionDeclarer {
      * behavior.
      */
     public OptionParser() {
-        recognizedOptions = new AbbreviationMap<>();
-        trainingOrder = new ArrayList<>();
-        requiredIf = new HashMap<>();
-        requiredUnless = new HashMap<>();
+        recognizedOptions = new AbbreviationMap<AbstractOptionSpec<?>>();
+        trainingOrder = new ArrayList<OptionSpec<?>>();
+        requiredIf = new HashMap<List<String>, Set<OptionSpec<?>>>();
+        requiredUnless = new HashMap<List<String>, Set<OptionSpec<?>>>();
         state = moreOptions( false );
 
         recognize( new NonOptionArgumentSpec<String>() );
@@ -255,7 +255,7 @@ public class OptionParser implements OptionDeclarer {
     }
 
     public NonOptionArgumentSpec<String> nonOptions() {
-        NonOptionArgumentSpec<String> spec = new NonOptionArgumentSpec<>();
+        NonOptionArgumentSpec<String> spec = new NonOptionArgumentSpec<String>();
 
         recognize( spec );
 
@@ -263,7 +263,7 @@ public class OptionParser implements OptionDeclarer {
     }
 
     public NonOptionArgumentSpec<String> nonOptions( String description ) {
-        NonOptionArgumentSpec<String> spec = new NonOptionArgumentSpec<>( description );
+        NonOptionArgumentSpec<String> spec = new NonOptionArgumentSpec<String>( description );
 
         recognize( spec );
 
@@ -352,7 +352,7 @@ public class OptionParser implements OptionDeclarer {
      * @since 4.6
      */
     public Map<String, OptionSpec<?>> recognizedOptions() {
-        Map<String, OptionSpec<?>> options = new LinkedHashMap<>();
+        Map<String, OptionSpec<?>> options = new LinkedHashMap<String, OptionSpec<?>>();
         for ( OptionSpec<?> spec : trainingOrder )
             for ( String option : spec.options() )
                 options.put( option, spec );
@@ -391,8 +391,8 @@ public class OptionParser implements OptionDeclarer {
     }
 
     private List<AbstractOptionSpec<?>> missingRequiredOptions(OptionSet options) {
-        List<AbstractOptionSpec<?>> missingRequiredOptions = new ArrayList<>();
-
+        List<AbstractOptionSpec<?>> missingRequiredOptions = new ArrayList<AbstractOptionSpec<?>>();
+        
         for ( AbstractOptionSpec<?> each : recognizedOptions.toJavaUtilMap().values() ) {
             if ( each.isRequired() && !options.has( each ) )
                 missingRequiredOptions.add(each);
@@ -517,7 +517,7 @@ public class OptionParser implements OptionDeclarer {
 
         Set<OptionSpec<?>> associated = target.get( precedentSynonyms );
         if ( associated == null ) {
-            associated = new HashSet<>();
+            associated = new HashSet<OptionSpec<?>>();
             target.put( precedentSynonyms, associated );
         }
 

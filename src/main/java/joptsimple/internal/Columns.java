@@ -52,7 +52,7 @@ class Columns {
         List<String> options = piecesOf( row.option, optionWidth );
         List<String> descriptions = piecesOf( row.description, descriptionWidth );
 
-        List<Row> rows = new ArrayList<>();
+        List<Row> rows = new ArrayList<Row>();
         for ( int i = 0; i < Math.max( options.size(), descriptions.size() ); ++i )
             rows.add( new Row( itemOrEmpty( options, i ), itemOrEmpty( descriptions, i ) ) );
 
@@ -64,7 +64,7 @@ class Columns {
     }
 
     private List<String> piecesOf( String raw, int width ) {
-        List<String> pieces = new ArrayList<>();
+        List<String> pieces = new ArrayList<String>();
 
         for ( String each : raw.trim().split( LINE_SEPARATOR ) )
             pieces.addAll( piecesOfEmbeddedLine( each, width ) );
@@ -73,7 +73,7 @@ class Columns {
     }
 
     private List<String> piecesOfEmbeddedLine( String line, int width ) {
-        List<String> pieces = new ArrayList<>();
+        List<String> pieces = new ArrayList<String>();
 
         BreakIterator words = BreakIterator.getLineInstance( Locale.US );
         words.setText( line );

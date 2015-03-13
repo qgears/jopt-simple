@@ -40,7 +40,7 @@ import static joptsimple.internal.Strings.*;
  * @author <a href="mailto:pholser@alumni.rice.edu">Paul Holser</a>
  */
 abstract class AbstractOptionSpec<V> implements OptionSpec<V>, OptionDescriptor {
-    private final List<String> options = new ArrayList<>();
+    private final List<String> options = new ArrayList<String>();
     private final String description;
     private boolean forHelp;
 
@@ -88,7 +88,9 @@ abstract class AbstractOptionSpec<V> implements OptionSpec<V>, OptionDescriptor 
     protected V convertWith( ValueConverter<V> converter, String argument ) {
         try {
             return Reflection.convertWith( converter, argument );
-        } catch ( ReflectionException | ValueConversionException ex ) {
+        } catch ( ReflectionException ex){
+        	throw new OptionArgumentConversionException( this, argument, ex );
+        } catch (ValueConversionException ex ) {
             throw new OptionArgumentConversionException( this, argument, ex );
         }
     }
@@ -110,8 +112,8 @@ abstract class AbstractOptionSpec<V> implements OptionSpec<V>, OptionDescriptor 
             return;
         }
 
-        List<String> shortOptions = new ArrayList<>();
-        List<String> longOptions = new ArrayList<>();
+        List<String> shortOptions = new ArrayList<String>();
+        List<String> longOptions = new ArrayList<String>();
 
         for ( String each : unarranged ) {
             if ( each.length() == 1 )

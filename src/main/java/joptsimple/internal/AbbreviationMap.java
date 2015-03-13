@@ -60,7 +60,7 @@ import java.util.TreeMap;
 public class AbbreviationMap<V> {
     private String key;
     private V value;
-    private final Map<Character, AbbreviationMap<V>> children = new TreeMap<>();
+    private final Map<Character, AbbreviationMap<V>> children = new TreeMap<Character, AbbreviationMap<V>>();
     private int keysBeyond;
 
     /**
@@ -141,7 +141,7 @@ public class AbbreviationMap<V> {
         char nextChar = chars[ offset ];
         AbbreviationMap<V> child = children.get( nextChar );
         if ( child == null ) {
-            child = new AbbreviationMap<>();
+            child = new AbbreviationMap<V>();
             children.put( nextChar, child );
         }
 
@@ -214,7 +214,7 @@ public class AbbreviationMap<V> {
      * @return a Java map corresponding to this abbreviation map
      */
     public Map<String, V> toJavaUtilMap() {
-        Map<String, V> mappings = new TreeMap<>();
+        Map<String, V> mappings = new TreeMap<String, V>();
         addToMappings( mappings );
         return mappings;
     }

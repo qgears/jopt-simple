@@ -80,7 +80,7 @@ public class BuiltinHelpFormatter implements HelpFormatter {
                 }
             };
 
-        Set<OptionDescriptor> sorted = new TreeSet<>( comparator );
+        Set<OptionDescriptor> sorted = new TreeSet<OptionDescriptor>( comparator );
         sorted.addAll( options.values() );
 
         addRows( sorted );

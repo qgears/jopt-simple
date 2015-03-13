@@ -70,7 +70,7 @@ public final class Reflection {
         try {
             Method valueOf = clazz.getDeclaredMethod( "valueOf", String.class );
             if ( meetsConverterRequirements( valueOf, clazz ) )
-                return new MethodInvokingValueConverter<>( valueOf, clazz );
+                return new MethodInvokingValueConverter<V>( valueOf, clazz );
 
             return null;
         } catch ( NoSuchMethodException ignored ) {
@@ -80,7 +80,7 @@ public final class Reflection {
 
     private static <V> ValueConverter<V> constructorConverter( Class<V> clazz ) {
         try {
-            return new ConstructorInvokingValueConverter<>( clazz.getConstructor( String.class ) );
+            return new ConstructorInvokingValueConverter<V>( clazz.getConstructor( String.class ) );
         } catch ( NoSuchMethodException ignored ) {
             return null;
         }

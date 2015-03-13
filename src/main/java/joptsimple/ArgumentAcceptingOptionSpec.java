@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import static java.util.Collections.*;
-import static java.util.Objects.*;
+//import static java.util.Objects.*;
 import static joptsimple.internal.Reflection.*;
 import static joptsimple.internal.Strings.*;
 
@@ -62,7 +62,7 @@ public abstract class ArgumentAcceptingOptionSpec<V> extends AbstractOptionSpec<
     private ValueConverter<V> converter;
     private String argumentDescription = "";
     private String valueSeparator = String.valueOf( NIL_VALUE_SEPARATOR );
-    private final List<V> defaultValues = new ArrayList<>();
+    private final List<V> defaultValues = new ArrayList<V>();
 
     ArgumentAcceptingOptionSpec( String option, boolean argumentRequired ) {
         super( option );
@@ -205,7 +205,6 @@ public abstract class ArgumentAcceptingOptionSpec<V> extends AbstractOptionSpec<
      * @throws NullPointerException if {@code value}, {@code values}, or any elements of {@code values} are
      * {@code null}
      */
-    @SafeVarargs
     public final ArgumentAcceptingOptionSpec<V> defaultsTo( V value, V... values ) {
         addDefaultValue( value );
         defaultsTo( values );
@@ -256,7 +255,9 @@ public abstract class ArgumentAcceptingOptionSpec<V> extends AbstractOptionSpec<
     }
 
     private void addDefaultValue( V value ) {
-        requireNonNull( value );
+        if (value == null){
+        	throw new NullPointerException();
+        }
         defaultValues.add( value );
     }
 
