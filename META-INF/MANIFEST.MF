@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Joptsimple
+Bundle-Name: Joptsimple 3.2-rc1 + annotation support
 Bundle-SymbolicName: joptsimple
 Bundle-Version: 1.0.0
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
