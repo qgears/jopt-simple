@@ -57,7 +57,6 @@ public class AnnotatedClass {
 	private OptionParser parser;
 	private OptionSet options;
 	private Map<Field, OptionSpec<?>> args;
-	
 	/**
 	 * Prints all arguments and the value of them. Must be called after
 	 * {@link #parseAnnotations(Object)} was called.
@@ -168,7 +167,8 @@ public class AnnotatedClass {
 					a=spec;
 				}else
 				{
-					ArgumentAcceptingOptionSpec<Boolean> aa=spec.withRequiredArg().ofType(Boolean.class);
+					ArgumentAcceptingOptionSpec<Boolean> aa=spec.withRequiredArg()
+							.withValuesConvertedBy(BooleanConverter.getInstance());
 					a=aa;
 					if(defaultValue!=null)
 					{

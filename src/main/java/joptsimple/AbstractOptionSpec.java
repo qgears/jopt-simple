@@ -69,6 +69,10 @@ abstract class AbstractOptionSpec<V> implements OptionSpec<V>, OptionDescriptor 
     public String description() {
         return description;
     }
+    
+    public void geza(){
+    	
+    }
 
     public final AbstractOptionSpec<V> forHelp() {
         forHelp = true;
