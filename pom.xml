@@ -7,7 +7,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 		<version>1.0.0</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>jopt-simple/pomq.xml</module>
+		<module>jopt-simple</module>
 		<module>build/jopt-simple.p2</module>
 	</modules>
 </project>
