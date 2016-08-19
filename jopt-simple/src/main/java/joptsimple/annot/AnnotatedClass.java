@@ -58,8 +58,11 @@ public class AnnotatedClass {
 	private OptionSet options;
 	private Map<Field, OptionSpec<?>> args;
 	/**
-	 * Prints all arguments and the value of them. Must be called after
-	 * {@link #parseAnnotations(Object)} was called.
+	 * Prints all arguments and the value of them to stdout.
+	 * 
+	 * To print it elsewhere use optionsToString() instead.
+	 * 
+	 * Must be called after {@link #parseAnnotations(Object)} was called.
 	 * <p>
 	 * This method should only be for debugging purposes to quickly
 	 * print the parsed parameters of the application.
@@ -67,13 +70,29 @@ public class AnnotatedClass {
 	 */
 	public void print() throws Exception
 	{
+		System.out.println(optionsToString());
+	}
+	/**
+	 * Format all arguments and the value of them in user readable format to a String.
+	 * Must be called after
+	 * {@link #parseAnnotations(Object)} was called.
+	 * <p>
+	 * This method should only be for debugging purposes to quickly
+	 * print the parsed parameters of the application.
+	 * @throws Exception in case of reflective access of the object fields fails.
+	 * @return The actual argument values parsed in a user readable format.
+	 */
+	public String optionsToString() throws Exception
+	{
+		StringBuilder ret=new StringBuilder();
 		Class<?> c=o.getClass();
 		Field[] fs=c.getFields();
 		for(Field f: fs)
 		{
-			System.out.println(""+f.getName()+": "+f.get(o));
+			ret.append(""+f.getName()+": "+f.get(o)+"\n");
 		}
-		System.out.println("Remaining args: "+nonOptionArguments());
+		ret.append("Remaining args: "+nonOptionArguments());
+		return ret.toString();
 	}
 	
 	/**
