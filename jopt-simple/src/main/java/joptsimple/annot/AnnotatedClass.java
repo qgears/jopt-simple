@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +58,13 @@ public class AnnotatedClass {
 	private OptionParser parser;
 	private OptionSet options;
 	private Map<Field, OptionSpec<?>> args;
+	private Field nonOptionArguments;
 	/**
-	 * Prints all arguments and the value of them. Must be called after
-	 * {@link #parseAnnotations(Object)} was called.
+	 * Prints all arguments and the value of them to stdout.
+	 * 
+	 * To print it elsewhere use optionsToString() instead.
+	 * 
+	 * Must be called after {@link #parseAnnotations(Object)} was called.
 	 * <p>
 	 * This method should only be for debugging purposes to quickly
 	 * print the parsed parameters of the application.
@@ -67,13 +72,29 @@ public class AnnotatedClass {
 	 */
 	public void print() throws Exception
 	{
+		System.out.println(optionsToString());
+	}
+	/**
+	 * Format all arguments and the value of them in user readable format to a String.
+	 * Must be called after
+	 * {@link #parseAnnotations(Object)} was called.
+	 * <p>
+	 * This method should only be for debugging purposes to quickly
+	 * print the parsed parameters of the application.
+	 * @throws Exception in case of reflective access of the object fields fails.
+	 * @return The actual argument values parsed in a user readable format.
+	 */
+	public String optionsToString() throws Exception
+	{
+		StringBuilder ret=new StringBuilder();
 		Class<?> c=o.getClass();
 		Field[] fs=c.getFields();
 		for(Field f: fs)
 		{
-			System.out.println(""+f.getName()+": "+f.get(o));
+			ret.append(""+f.getName()+": "+f.get(o)+"\n");
 		}
-		System.out.println("Remaining args: "+nonOptionArguments());
+		ret.append("Remaining args: "+nonOptionArguments());
+		return ret.toString();
 	}
 	
 	/**
@@ -109,6 +130,10 @@ public class AnnotatedClass {
 				f.set(o, value);
 			}
 		}
+		if(nonOptionArguments!=null)
+		{
+			nonOptionArguments.set(o, nonOptionArguments());
+		}
 	}
 	@SuppressWarnings("unchecked")
 	private Object parseEnumValue(Field f, Object value) {
@@ -142,6 +167,11 @@ public class AnnotatedClass {
 		Field[] fs=c.getFields();
 		for(Field f: fs)
 		{
+			if(f.getAnnotation(JONonOptionArgumentsList.class)!=null)
+			{
+				nonOptionArguments=f;
+				continue;
+			}
 			Class<?> t=f.getType();
 			if(t.isPrimitive())
 			{
@@ -382,16 +412,32 @@ public class AnnotatedClass {
 	 */
 	public void printHelpOn(PrintStream out) throws IOException {
 		parser.printHelpOn(out);
+		if(nonOptionArguments!=null)
+		{
+			String help;
+			try {
+				help = getHelp(nonOptionArguments);
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+			out.println("Remaining arguments: "+help);
+		}
 	}
 
 	/**
 	 * Get the list of non option arguments (all arguments after the -- mark on the command line)
 	 * that are not parsed by this options parser instance.
-     * <p>
-     * See {@link OptionSet#nonOptionArguments()}.
+	 * <p>
+	 * See {@link OptionSet#nonOptionArguments()}.
 	 * @return
 	 */
-	public List<?> nonOptionArguments() {
-		return options.nonOptionArguments();
+	public List<String> nonOptionArguments() {
+		List<String> ret=new ArrayList<String>();
+		List<?> l=options.nonOptionArguments();
+		for(Object o: l)
+		{
+			ret.add(""+o);
+		}
+		return ret;
 	}
 }
