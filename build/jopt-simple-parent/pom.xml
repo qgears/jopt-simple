@@ -12,7 +12,7 @@
 	
 	<groupId>hu.qgears</groupId>
 	<artifactId>jopt-simple-parent</artifactId>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<distributionManagement>
 		<site>
