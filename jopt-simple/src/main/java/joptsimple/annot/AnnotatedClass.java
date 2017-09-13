@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -88,8 +89,7 @@ public class AnnotatedClass {
 	{
 		StringBuilder ret=new StringBuilder();
 		Class<?> c=o.getClass();
-		Field[] fs=c.getFields();
-		for(Field f: fs)
+		for(Field f: getArgFields(c))
 		{
 			ret.append(""+f.getName()+": "+f.get(o)+"\n");
 		}
@@ -164,8 +164,7 @@ public class AnnotatedClass {
 		parser = new OptionParser();
 		args=new HashMap<Field, OptionSpec<?>>();
 		Class<?> c=programArgumentsObject.getClass();
-		Field[] fs=c.getFields();
-		for(Field f: fs)
+		for(Field f: getArgFields(c))
 		{
 			if(f.getAnnotation(JONonOptionArgumentsList.class)!=null)
 			{
@@ -256,6 +255,25 @@ public class AnnotatedClass {
 			}
 		}
 	}
+	private List<Field> getArgFields(Class<?> c) {
+		List<Field> fs = new ArrayList<Field>();
+		
+		for (Field f : c.getFields()){
+			if (!skipField(f)) {
+				fs.add(f);
+			}
+		}
+		return fs;
+	}
+
+	private boolean skipField(Field f) {
+		int mod = f.getModifiers();
+		if (Modifier.isFinal(mod) || Modifier.isStatic(mod)) {
+			return true;
+		}
+		return false;
+	}
+	
 	private <T>ArgumentAcceptingOptionSpec<T> createListParameters(
 			OptionSpecBuilder spec, Object defaultValue, Class<T> elementType) {
 		if (elementType != null){
