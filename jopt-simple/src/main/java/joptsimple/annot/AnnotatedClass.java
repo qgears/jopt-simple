@@ -8,9 +8,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
@@ -54,12 +52,10 @@ import joptsimple.OptionSpecBuilder;
  * @see OptionParser
  */
 public class AnnotatedClass {
-	
-	private Object o;
 	private OptionParser parser;
 	private OptionSet options;
-	private Map<Field, OptionSpec<?>> args;
-	private Field nonOptionArguments;
+	private List<Option> args;
+	private Option nonOptionArguments;
 	/**
 	 * Prints all arguments and the value of them to stdout.
 	 * 
@@ -88,10 +84,9 @@ public class AnnotatedClass {
 	public String optionsToString() throws Exception
 	{
 		StringBuilder ret=new StringBuilder();
-		Class<?> c=o.getClass();
-		for(Field f: getArgFields(c))
+		for(Option o: args)
 		{
-			ret.append(""+f.getName()+": "+f.get(o)+"\n");
+			ret.append(""+o.f.getName()+": "+o.f.get(o.o)+"\n");
 		}
 		ret.append("Remaining args: "+nonOptionArguments());
 		return ret.toString();
@@ -108,31 +103,31 @@ public class AnnotatedClass {
 	public void parseArgs(String [] args) throws Exception
 	{
 		options=parser.parse(args);
-		for(Field f:this.args.keySet())
+		for(Option opt: this.args)
 		{
 			Object value=null;
-			if(isSimpleBoolean(f))
+			if(isSimpleBoolean(opt.f))
 			{
-				value=options.has(this.args.get(f));
-			}else if(f.getType()==List.class)
+				value=options.has(opt.spec);
+			}else if(opt.f.getType()==List.class)
 			{
-				value=options.valuesOf(this.args.get(f));
+				value=options.valuesOf(opt.spec);
 			}else
 			{
-				value=this.args.get(f).value(options);
+				value=opt.spec.value(options);
 			}
 			if(value!=null)
 			{
-				if(f.getType().isEnum())
+				if(opt.f.getType().isEnum())
 				{
-					value=parseEnumValue(f, value);
+					value=parseEnumValue(opt.f, value);
 				}
-				f.set(o, value);
+				opt.f.set(opt.o, value);
 			}
 		}
 		if(nonOptionArguments!=null)
 		{
-			nonOptionArguments.set(o, nonOptionArguments());
+			nonOptionArguments.f.set(nonOptionArguments.o, nonOptionArguments());
 		}
 	}
 	@SuppressWarnings("unchecked")
@@ -160,21 +155,33 @@ public class AnnotatedClass {
 	 */
 	public void parseAnnotations(Object programArgumentsObject) throws Exception
 	{
-		this.o=programArgumentsObject;
 		parser = new OptionParser();
-		args=new HashMap<Field, OptionSpec<?>>();
+		args=new ArrayList<Option>();
+		parseFields(programArgumentsObject, "");
+	}
+	private void parseFields(Object programArgumentsObject, String prefix) throws Exception
+	{
 		Class<?> c=programArgumentsObject.getClass();
-		for(Field f: getArgFields(c))
+		List<Field> fs=getArgFields(c);
+		for(Field f: fs)
 		{
 			if(f.getAnnotation(JONonOptionArgumentsList.class)!=null)
 			{
-				nonOptionArguments=f;
+				nonOptionArguments=new Option(programArgumentsObject, f, null);
 				continue;
 			}
 			Class<?> t=f.getType();
 			if(t.isPrimitive())
 			{
 				t=getWrappingClass(t);
+			}
+			if(f.getAnnotation(JODelegate.class)!=null)
+			{
+				JODelegate d=f.getAnnotation(JODelegate.class);
+				String subprefix=d.prefix()==null?"":d.prefix();
+				Object delegate=f.get(programArgumentsObject);
+				parseFields(delegate, prefix+subprefix);
+				return;
 			}
 			OptionSpecBuilder spec=parser.accepts(f.getName(), getHelp(f));
 			Object defaultValue=f.get(programArgumentsObject);
@@ -203,7 +210,7 @@ public class AnnotatedClass {
 					{
 						aa.defaultsTo((Boolean)defaultValue);
 					}
-				}				
+				}
 			}else if(File.class==t)
 			{
 				ArgumentAcceptingOptionSpec<File> bb=spec.withRequiredArg().ofType(File.class);
@@ -251,7 +258,7 @@ public class AnnotatedClass {
 			}
 			if(a!=null)
 			{
-				args.put(f, a);
+				args.add(new Option(programArgumentsObject, f, a));
 			}
 		}
 	}
@@ -434,7 +441,7 @@ public class AnnotatedClass {
 		{
 			String help;
 			try {
-				help = getHelp(nonOptionArguments);
+				help = getHelp(nonOptionArguments.f);
 			} catch (Exception e) {
 				throw new IOException(e);
 			}
