@@ -86,7 +86,7 @@ public class AnnotatedClass {
 		StringBuilder ret=new StringBuilder();
 		for(Option o: args)
 		{
-			ret.append(""+o.f.getName()+": "+o.f.get(o.o)+"\n");
+			ret.append(""+o.spec.options().get(0)+": "+o.f.get(o.o)+"\n");
 		}
 		ret.append("Remaining args: "+nonOptionArguments());
 		return ret.toString();
@@ -170,6 +170,10 @@ public class AnnotatedClass {
 				nonOptionArguments=new Option(programArgumentsObject, f, null);
 				continue;
 			}
+			if(f.getAnnotation(JOSkip.class)!=null)
+			{
+				continue;
+			}
 			Class<?> t=f.getType();
 			if(t.isPrimitive())
 			{
@@ -181,9 +185,9 @@ public class AnnotatedClass {
 				String subprefix=d.prefix()==null?"":d.prefix();
 				Object delegate=f.get(programArgumentsObject);
 				parseFields(delegate, prefix+subprefix);
-				return;
+				continue;
 			}
-			OptionSpecBuilder spec=parser.accepts(f.getName(), getHelp(f));
+			OptionSpecBuilder spec=parser.accepts(getArgumentName(prefix,f.getName()), getHelp(f));
 			Object defaultValue=f.get(programArgumentsObject);
 			OptionSpec<?>a=null;
 			if(t==Integer.class)
@@ -261,6 +265,13 @@ public class AnnotatedClass {
 				args.add(new Option(programArgumentsObject, f, a));
 			}
 		}
+	}
+	private String getArgumentName(String prefix, String name) {
+		if(prefix!=null &&prefix.length()>0)
+		{
+			return prefix+Character.toUpperCase(name.charAt(0))+name.substring(1);
+		}
+		return name;
 	}
 	private List<Field> getArgFields(Class<?> c) {
 		List<Field> fs = new ArrayList<Field>();

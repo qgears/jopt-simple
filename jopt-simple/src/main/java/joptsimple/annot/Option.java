@@ -17,4 +17,8 @@ public class Option {
 		this.f = f;
 		this.spec = spec;
 	}
+	@Override
+	public String toString() {
+		return ""+f.getName();
+	}
 }

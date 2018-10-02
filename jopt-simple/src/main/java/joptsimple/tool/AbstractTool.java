@@ -15,9 +15,9 @@ abstract public class AbstractTool implements ITool
 		IArgs a=createArgsObject();
 		AnnotatedClass ac=new AnnotatedClass();
 		ac.parseAnnotations(a);
-		ac.parseArgs(subList.toArray(new String[]{}));
 		try
 		{
+			ac.parseArgs(subList.toArray(new String[]{}));
 			a.validate();
 		}catch(Exception e)
 		{
