@@ -12,4 +12,10 @@
   <artifactId>joptsimple</artifactId>
   <version>1.3.0-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
+ <licenses>
+                <license>
+                        <name>JOptSimple MIT license</name>
+                        <url>https://github.com/qgears/jopt-simple/blob/master/jopt-simple/LICENSE.txt</url>
+                </license>
+        </licenses>
 </project>
