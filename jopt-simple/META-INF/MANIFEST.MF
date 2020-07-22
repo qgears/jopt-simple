@@ -8,6 +8,6 @@ Export-Package: joptsimple,
 Bundle-Name: Joptsimple 3.2-rc1 + annotation support
 Bundle-Version: 1.3.0.qualifier
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-Vendor: Q-Gears Kft.
 
