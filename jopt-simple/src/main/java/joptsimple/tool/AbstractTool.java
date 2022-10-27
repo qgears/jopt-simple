@@ -1,5 +1,6 @@
 package joptsimple.tool;
 
+import java.io.PrintStream;
 import java.util.List;
 
 import joptsimple.annot.AnnotatedClass;
@@ -10,6 +11,7 @@ abstract public class AbstractTool implements ITool
 	{
 		void validate();
 	}
+	protected AnnotatedClass ac;
 	@Override
 	final public int exec(List<String> subList) throws Exception {
 		IArgs a=createArgsObject();
@@ -18,6 +20,7 @@ abstract public class AbstractTool implements ITool
 		try
 		{
 			ac.parseArgs(subList.toArray(new String[]{}));
+			this.ac=ac;
 			a.validate();
 		}catch(Exception e)
 		{
@@ -34,7 +37,15 @@ abstract public class AbstractTool implements ITool
 			ac2.printHelpOn(System.out);
 			return 1;
 		}
+		this.ac=ac;
 		return doExec(a);
+	}
+	public void printValues(PrintStream out) throws Exception
+	{
+		if(ac!=null)
+		{
+			out.println(ac.optionsToString());
+		}
 	}
 	@Override
 	public int help(List<String> subList) throws Exception {

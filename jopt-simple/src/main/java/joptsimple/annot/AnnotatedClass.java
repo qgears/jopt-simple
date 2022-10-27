@@ -255,6 +255,14 @@ public class AnnotatedClass {
 				ArgumentAcceptingOptionSpec<?> en = createListParameters(spec,
 						defaultValue, getListElementType(f));
 				a=en;
+			}else if(t==Double.class)
+			{
+				ArgumentAcceptingOptionSpec<Double> bb=spec.withRequiredArg().ofType(Double.class);
+				a=bb;
+				if(defaultValue!=null)
+				{
+					bb.defaultsTo((Double) defaultValue);
+				}
 			}
 			else
 			{
@@ -353,6 +361,10 @@ public class AnnotatedClass {
 		if(t==boolean.class)
 		{
 			return Boolean.class;
+		}
+		if(t==double.class)
+		{
+			return Double.class;
 		}
 		throw new RuntimeException("No wrappng type present implemented for: "+t);
 	}

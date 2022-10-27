@@ -18,7 +18,7 @@ public abstract class AbstractTools {
 		return ret;
 	}
 
-	private int exec(List<String> args){
+	public int exec(List<String> args){
 		try {
 			if(args.size()>0)
 			{
@@ -50,11 +50,7 @@ public abstract class AbstractTools {
 				return 1;
 			}else
 			{
-				System.out.println("Q-Gears command line tools");
-				System.out.println("Tool not specified.\n");
-				System.out.println("Help: $ java -jar tools.jar help {toolId}\n");
-				System.out.println("Available tools:");
-				System.out.println("");
+				printIntro();
 				for(ITool t: tools)
 				{
 					System.out.println(""+t.getId()+": "+head(t.getDescription()));
@@ -67,6 +63,17 @@ public abstract class AbstractTools {
 		}
 	}
 	/**
+	 * Print introduction to the console
+	 */
+	protected void printIntro() {
+		System.out.println("Q-Gears command line tools");
+		System.out.println("Tool not specified.\n");
+		System.out.println("Help: $ java -jar tools.jar help {toolId}\n");
+		System.out.println("Available tools:");
+		System.out.println("");
+	}
+
+	/**
 	 * First line and first 30 characters.
 	 * @param description
 	 * @return
@@ -76,7 +83,7 @@ public abstract class AbstractTools {
 			String s= description.split("\r\n")[0];
 			if(s.length()>60)
 			{
-				return s.substring(0, 70);
+				return s.substring(0, 60);
 			}
 			return s;
 		} catch (Exception e) {
