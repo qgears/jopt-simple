@@ -10,9 +10,9 @@
 
 	<parent>
 		<groupId>hu.qgears</groupId>
-		<artifactId>root-plain</artifactId>
+		<artifactId>jopt-simple-parent</artifactId>
 		<version>1.0.0</version>
-		<relativePath>../../repository-builder/parent-poms/root-plain</relativePath>
+		<relativePath>../build/jopt-simple-parent</relativePath>
 	</parent>
 
 	<build>
