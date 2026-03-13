@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: JOptSimple
+Bundle-SymbolicName: joptsimple
+Bundle-Version: 2.0.1.qualifier
+Export-Package: joptsimple,
+ joptsimple.annot,
+ joptsimple.internal,
+ joptsimple.tool,
+ joptsimple.util
+Bundle-Vendor: QGEARS
+Automatic-Module-Name: com.qgears.easywg
+Bundle-RequiredExecutionEnvironment: JavaSE-21
